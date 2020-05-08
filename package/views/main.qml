@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.3
+import QtQuick.Controls.Styles 1.4
 
 //---------MAIN WINDOW---------------
 
@@ -310,14 +311,34 @@ Window {
                     id: rectangle_option_gauss
                     color: "transparent"
                     visible: this === parent.active ? true : false
+                    anchors.fill: parent
                     Label {
                         id: label_option_gauss_deviation
                         color: "#ffffff"
                         text: qsTr("Deviation")
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: parent.width * 0.045
                     }
-
-                    TextInput {
+                    TextField {
                         id: input_gauss_deviation
+                        anchors.left: label_option_gauss_deviation.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        placeholderText: qsTr("Enter number")
+                        validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        color: "#ffffff"
+                        background:
+                            Rectangle {
+                             implicitWidth: 140
+                             implicitHeight: 40
+                             color: "transparent"
+                             border.color: "#00b503"
+                        }
+                        onTextChanged: {
+                            if(text)
+                                backend.deviation = text
+                        }
                     }
                 }
 
@@ -325,22 +346,141 @@ Window {
                     id: rectangle_option_entropy
                     color: "transparent"
                     visible: this === parent.active ? true : false
+                    anchors.fill: parent
+                    Label {
+                        id: label_option_entropy_size
+                        color: "#ffffff"
+                        text: qsTr("Mask Size")
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: parent.width * 0.045
+                    }
+                    TextField {
+                        id: input_entropy_size
+                        anchors.left: label_option_entropy_size.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        placeholderText: qsTr("Enter number")
+                        validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        color: "#ffffff"
+                        background:
+                            Rectangle {
+                             implicitWidth: 130
+                             implicitHeight: 40
+                             color: "transparent"
+                             border.color: "#00b503"
+                        }
+                        onTextChanged: {
+                            if(text)
+                                backend.mask_size = text
+                        }
+                    }
                 }
 
                 Rectangle {
                     id:rectangle_option_imopen
                     color: "transparent"
                     visible: this === parent.active ? true : false
-                }
+                    anchors.fill: parent
+                    Label {
+                        id: label_option_imopen_length
+                        color: "#ffffff"
+                        text: qsTr("Length")
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: parent.width * 0.045
+                    }
 
+                    TextField {
+                        id: input_imopen_length
+                        anchors.left: label_option_imopen_length.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        placeholderText: qsTr("Enter number")
+                        validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        color: "#ffffff"
+                        background:
+                            Rectangle {
+                             implicitWidth: 130
+                             implicitHeight: 40
+                             color: "transparent"
+                             border.color: "#00b503"
+                        }
+                        onTextChanged: {
+                            if(text)
+                                backend.deviation = text
+                        }
+                    }
+                    Label {
+                        id: label_option_imopen_deg
+                        color: "#ffffff"
+                        text: qsTr("Angle (deg)")
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: input_imopen_length.right
+                        anchors.leftMargin: parent.width * 0.045
+                    }
+
+                    TextField {
+                        id: input_imopen_deg
+                        anchors.left: label_option_imopen_deg.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        placeholderText: qsTr("Enter number")
+                        validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        color: "#ffffff"
+                        background:
+                            Rectangle {
+                             implicitWidth: 130
+                             implicitHeight: 40
+                             color: "transparent"
+                             border.color: "#00b503"
+                        }
+                        onTextChanged: {
+                            if(text)
+                                backend.deviation = text
+                        }
+                    }
+                }
                 Rectangle {
                     id:rectangle_option_convex
                     color: "transparent"
                     visible: this === parent.active ? true : false
                 }
+
+                Rectangle {
+                    id: button_transform
+                    anchors.right: parent.right
+                    anchors.rightMargin: parent.width * 0.056
+                    width: parent.width * 0.18
+                    height: parent.height * 0.5
+                    color: "#5b5b5b"
+                    anchors.verticalCenter: parent.verticalCenter
+                    border.color: "#353535"
+                    radius: 4
+                    visible: rectangle_option_convex != parent.active && parent.active ? true : false
+                    Text {
+                        id: text_button_transform
+                        text: qsTr("OK")
+                        anchors.centerIn: parent
+                        font.pixelSize: 9
+                        color: '#ffffff'
+                    }
+                    MouseArea {
+                        id: mouse_area_button_transform
+                        z: 2
+                        hoverEnabled: true
+                        anchors.fill: parent
+                        onEntered: {
+                            parent.color = "#00b503"
+                        }
+                        onExited: {
+                            parent.color = "#5b5b5b"
+                        }
+                        onClicked: {
+                        }
+                    }
+                }
             }
-
-
             Rectangle {
                 id: buttons_settings_border
                 anchors.top: rectangle_buttons.bottom
@@ -351,7 +491,6 @@ Window {
                 color: "#353535"
             }
         }
-
         Rectangle {
             id: image_section_border
             anchors.left: parent.left
