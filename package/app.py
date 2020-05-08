@@ -1,9 +1,9 @@
 import sys
 from os.path import abspath, dirname, join
-
 from PySide2.QtCore import QObject, Slot
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
+
 
 def run():
     app = QGuiApplication(sys.argv)
