@@ -16,8 +16,8 @@ def run():
     backend.lengthChanged.connect(lambda length: print(length))
     backend.angleChanged.connect(lambda angle: print(angle))
     engine.rootContext().setContextProperty("backend", backend)
-    engine.addImageProvider("imgprovider", ImageProvider())
-    qml_file = join(dirname(__file__), 'views/new.qml')
+    engine.addImageProvider("imgprovider", backend.image_provider)
+    qml_file = join(dirname(__file__), 'views/main.qml')
     engine.load(abspath(qml_file))
 
     if not engine.rootObjects():

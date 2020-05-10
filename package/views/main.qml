@@ -25,6 +25,13 @@ ApplicationWindow {
     property int controlsElevation: 6
     property int paneElevation: 4
 
+    signal reemitted(string s)
+        Component.onCompleted: backend.dataReady.connect(window.reemitted)
+        onReemitted: {
+            console.log(s)
+            outputImage.source = s
+        }
+
     Pane {
         id: mainPanel
         height: parent.height
@@ -52,6 +59,7 @@ ApplicationWindow {
                         console.log("You chose: " + inputFileDialog.fileUrl)
                         backend.load_image(inputFileDialog.fileUrl)
                         inputImage.source = inputFileDialog.fileUrl
+                        outputImage.source = ""
                     }
                     onRejected: {
                     }
@@ -154,6 +162,10 @@ ApplicationWindow {
                         horizontalAlignment: TextInput.AlignHCenter
                         placeholderText: qsTr("Enter number")
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        onTextChanged: {
+                            if(text)
+                                backend.deviation = text
+                        }
                     }
                     Label {
                         id: maskSizeLabel
@@ -174,6 +186,10 @@ ApplicationWindow {
                         horizontalAlignment: TextInput.AlignHCenter
                         placeholderText: qsTr("Enter number")
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        onTextChanged: {
+                            if(text)
+                                backend.mask_size = text
+                        }
                     }
                     Label {
                         id: lengthLabel
@@ -194,6 +210,10 @@ ApplicationWindow {
                         horizontalAlignment: TextInput.AlignHCenter
                         placeholderText: qsTr("Enter number")
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
+                        onTextChanged: {
+                            if(text)
+                                backend.length = text
+                        }
                     }
 
                     Label {
@@ -216,6 +236,9 @@ ApplicationWindow {
                         value: 0
                         to: 180
                         stepSize: 1
+                        onMoved: {
+                            backend.angle = value
+                        }
                     }
                     Label {
                         id: angleValueLabel
@@ -232,6 +255,7 @@ ApplicationWindow {
                         Material.elevation: controlsElevation
                         width: parent.width
                         text: qsTr("START")
+                        onClicked: {outputImage.source = "image://imgprovider/data.jpg"}
                     }
                 }
             }
