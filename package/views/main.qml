@@ -2,6 +2,8 @@ import QtQuick 2.9
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.3
 import QtQuick.Controls.Styles 1.4
+import QtQuick 2.2
+import QtQuick.Dialogs 1.0
 
 //---------MAIN WINDOW---------------
 
@@ -39,7 +41,7 @@ Window {
                 anchors.top: parent.top
                 anchors.topMargin: parent.height * 0.1
                 fillMode: Image.PreserveAspectFit
-                source: "qrc:/qtquickplugin/images/template_image.png"
+                source: ""
             }
 
             Image {
@@ -51,7 +53,7 @@ Window {
                 anchors.top: parent.top
                 anchors.topMargin: parent.height * 0.1
                 fillMode: Image.PreserveAspectFit
-                source: "qrc:/qtquickplugin/images/template_image.png"
+                source: file_dialog_input.fileUrl
             }
 
             Label {
@@ -103,6 +105,21 @@ Window {
                     onExited: {
                         parent.color = "#5b5b5b"
                     }
+                    onClicked: {
+                        file_dialog_input.open()
+                    }
+                }
+            }
+
+            FileDialog {
+                id: file_dialog_input
+                title: "Please choose a file"
+                folder: shortcuts.pictures
+                onAccepted: {
+                    console.log("You chose: " + file_dialog_input.fileUrl)
+                    backend.load_image(file_dialog_input.fileUrl)
+                }
+                onRejected: {
                 }
             }
 
@@ -408,7 +425,7 @@ Window {
                         }
                         onTextChanged: {
                             if(text)
-                                backend.deviation = text
+                                backend.length = text
                         }
                     }
                     Label {
@@ -437,7 +454,7 @@ Window {
                         }
                         onTextChanged: {
                             if(text)
-                                backend.deviation = text
+                                backend.angle = text
                         }
                     }
                 }
