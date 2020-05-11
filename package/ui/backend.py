@@ -5,19 +5,6 @@ from PySide2.QtQuick import *
 import cv2
 
 
-class ImageProvider(QQuickImageProvider):
-    def __init__(self):
-        super().__init__(QQuickImageProvider.Image)
-        self._output_image = None
-
-    def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
-        print("request")
-        #img = QImage(300, 300, QImage.Format_RGBA8888)
-        #img.fill(Qt.red)
-        #return img
-        return self._output_image
-
-
 class Backend(QObject):
     deviationChanged = Signal(float)
     maskSizeChanged = Signal(float)
@@ -27,12 +14,12 @@ class Backend(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._deviation = 0
-        self._maskSize = 0
-        self._length = 0
-        self._angle = 0
-        self._input_image = []
-        self._output_image = []
+        self._deviation = None
+        self._maskSize = None
+        self._length = None
+        self._angle = None
+        self._input_image = None
+        self._output_image = None
         self.image_provider = ImageProvider()
 
     @Property(str, notify=deviationChanged)
@@ -85,12 +72,33 @@ class Backend(QObject):
         self._input_image = cv2.imread(url[7:])
         x, y = self._input_image.shape[:2]
         self.image_provider._output_image = self.make_qimage(self._input_image)
-        #self.dataReady.emit("image://imgprovider/data.jpg")
-        print(x)
+
+    @Slot(int)
+    def transform_image(self, opt):
+        if opt == 3:
+            self.convex_surrounding()
+
+    def convex_surrounding(self):
+        self.dataReady.emit("image://imgprovider/data.jpg")
 
     @staticmethod
-    def make_qimage(image):
-        height, width, channel = image.shape
+    def make_qimage(img) -> QImage:
+        height, width, channel = img.shape
         bytes_per_line = 3 * width
-        q_img = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
+        q_img = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
         return q_img
+
+
+class Image:
+    def __init__(self):
+        self._img = None
+
+
+class ImageProvider(QQuickImageProvider):
+    def __init__(self):
+        super().__init__(QQuickImageProvider.Image)
+        self._output_image = None
+
+    def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
+        print("request")
+        return self._output_image

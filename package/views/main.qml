@@ -7,8 +7,6 @@ import QtQuick 2.2
 import QtQuick.Dialogs 1.0
 import QtQuick.Layouts 1.12
 
-//---------MAIN WINDOW---------------
-
 ApplicationWindow {
     id: window
     visible: true
@@ -19,18 +17,17 @@ ApplicationWindow {
     title: qsTr("Image transformations")
     Material.theme: Material.Dark
 
-
     property int controlsAccent: Material.Purple
     property int controlsBackground: Material.Grey
     property int controlsElevation: 6
     property int paneElevation: 4
 
     signal reemitted(string s)
-        Component.onCompleted: backend.dataReady.connect(window.reemitted)
-        onReemitted: {
-            console.log(s)
-            outputImage.source = s
-        }
+    Component.onCompleted: backend.dataReady.connect(window.reemitted)
+    onReemitted: {
+        console.log(s)
+        outputImage.source = s
+    }
 
     Pane {
         id: mainPanel
@@ -57,14 +54,13 @@ ApplicationWindow {
                     folder: shortcuts.pictures
                     onAccepted: {
                         console.log("You chose: " + inputFileDialog.fileUrl)
-                        backend.load_image(inputFileDialog.fileUrl)
                         inputImage.source = inputFileDialog.fileUrl
+                        backend.load_image(inputFileDialog.fileUrl)
                         outputImage.source = ""
                     }
                     onRejected: {
                     }
                 }
-
                 Grid {
                     id: imagesColumn
                     rowSpacing: 10
@@ -73,7 +69,6 @@ ApplicationWindow {
                     columns: 2
                     rows: 3
                     horizontalItemAlignment: Grid.AlignHCenter
-
                     Button {
                         id: loadButton
                         width: (parent.width - 10) /2
@@ -84,7 +79,6 @@ ApplicationWindow {
                             inputFileDialog.open()
                         }
                     }
-
                     Button {
                         id: saveButton
                         width: (parent.width - 10) /2
@@ -92,17 +86,14 @@ ApplicationWindow {
                         Material.elevation: controlsElevation
                         text: qsTr("SAVE")
                     }
-
                     Label {
                         id: inputLabel
                         text: qsTr("Input Image")
                     }
-
                     Label {
                         id: outputLabel
                         text: qsTr("Output Image")
                     }
-
                     Image {
                         id: inputImage
                         Material.elevation: paneElevation
@@ -110,7 +101,6 @@ ApplicationWindow {
                         fillMode: Image.PreserveAspectFit
                         source: ""
                     }
-
                     Image {
                         id: outputImage
                         Material.elevation: paneElevation
@@ -120,7 +110,6 @@ ApplicationWindow {
                     }
                 }
             }
-
             Pane{
                 id: controlsPane
                 Material.elevation: paneElevation
@@ -215,7 +204,6 @@ ApplicationWindow {
                                 backend.length = text
                         }
                     }
-
                     Label {
                         id: angleLabel
                         visible: optionCombo.currentIndex == 2 ? true : false
@@ -255,15 +243,12 @@ ApplicationWindow {
                         Material.elevation: controlsElevation
                         width: parent.width
                         text: qsTr("START")
-                        onClicked: {outputImage.source = "image://imgprovider/data.jpg"}
+                        onClicked: {backend.transform_image(optionCombo.currentIndex)}
                     }
                 }
             }
         }
-
     }
-
-
 }
 
 
