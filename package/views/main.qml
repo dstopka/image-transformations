@@ -153,7 +153,7 @@ ApplicationWindow {
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
                         onTextChanged: {
                             if(text)
-                                backend.deviation = text
+                                parameters.deviation = text
                         }
                     }
                     Label {
@@ -177,7 +177,7 @@ ApplicationWindow {
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
                         onTextChanged: {
                             if(text)
-                                backend.mask_size = text
+                                parameters.mask_size = text
                         }
                     }
                     Label {
@@ -201,7 +201,7 @@ ApplicationWindow {
                         validator : RegExpValidator { regExp : /[0-9]+\.[0-9]+/ }
                         onTextChanged: {
                             if(text)
-                                backend.length = text
+                                parameters.length = text
                         }
                     }
                     Label {
@@ -225,7 +225,7 @@ ApplicationWindow {
                         to: 180
                         stepSize: 1
                         onMoved: {
-                            backend.angle = value
+                            parameters.angle = value
                         }
                     }
                     Label {
