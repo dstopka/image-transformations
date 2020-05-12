@@ -11,17 +11,20 @@ class Backend(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._input_image = None
-        self._output_image = None
+        self._input_img = None
+        self._output_img = None
         self.parameters = Parameters()
         self.image_provider = ImageProvider()
 
     @Slot(str)
     def load_image(self, url):
         print(url)
-        self._input_image = cv2.imread(url[7:])
-        x, y = self._input_image.shape[:2]
-        self.image_provider._output_image = self.make_qimage(self._input_image)
+        self._input_img = cv2.imread(url[7:])
+
+    @Slot(str)
+    def save_image(self, url):
+        print(url)
+        cv2.imwrite(url[7:], self._output_img)
 
     @Slot(int)
     def transform_image(self, opt):
@@ -29,19 +32,16 @@ class Backend(QObject):
             self.convex_surrounding()
 
     def convex_surrounding(self):
+        self._output_img = self._input_img
+        self.image_provider.img = self.make_qimage(self._output_img)
         self.dataReady.emit("image://imgprovider/data.jpg")
 
     @staticmethod
-    def make_qimage(img: np.ndarray) -> QImage:
+    def make_qimage(img) -> QImage:
         height, width, channel = img.shape
         bytes_per_line = 3 * width
         q_img = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
         return q_img
-
-
-class Image:
-    def __init__(self):
-        self._img = None
 
 
 class Parameters(QObject):
@@ -105,8 +105,17 @@ class Parameters(QObject):
 class ImageProvider(QQuickImageProvider):
     def __init__(self):
         super().__init__(QQuickImageProvider.Image)
-        self._output_image = None
+        self._image = None
 
     def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
         print("request")
-        return self._output_image
+        return self._image
+
+    @property
+    def img(self):
+        return self._image
+
+    @img.setter
+    def img(self, img):
+        if self._image != img:
+            self._image = img

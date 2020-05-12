@@ -53,10 +53,21 @@ ApplicationWindow {
                     title: "Please choose a file"
                     folder: shortcuts.pictures
                     onAccepted: {
-                        console.log("You chose: " + inputFileDialog.fileUrl)
                         inputImage.source = inputFileDialog.fileUrl
                         backend.load_image(inputFileDialog.fileUrl)
                         outputImage.source = ""
+                    }
+                    onRejected: {
+                    }
+                }
+
+                FileDialog {
+                    id: outputFileDialog
+                    title: "Choose place to save image"
+                    folder: shortcuts.pictures
+                    selectExisting: false
+                    onAccepted: {
+                        backend.save_image(outputFileDialog.fileUrl)
                     }
                     onRejected: {
                     }
@@ -85,6 +96,9 @@ ApplicationWindow {
                         Material.foreground: controlsBackground
                         Material.elevation: controlsElevation
                         text: qsTr("SAVE")
+                        onClicked: {
+                            outputFileDialog.open()
+                        }
                     }
                     Label {
                         id: inputLabel
