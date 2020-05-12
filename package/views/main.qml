@@ -4,7 +4,7 @@ import QtQuick.Controls 2.3
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Controls.Material 2.12
 import QtQuick 2.2
-import QtQuick.Dialogs 1.0
+import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.12
 
 ApplicationWindow {
@@ -22,11 +22,29 @@ ApplicationWindow {
     property int controlsElevation: 6
     property int paneElevation: 4
 
-    signal reemitted(string s)
-    Component.onCompleted: backend.dataReady.connect(window.reemitted)
-    onReemitted: {
+    signal outputReady(string s)
+    onOutputReady: {
         console.log(s)
         outputImage.source = s
+    }
+    signal warning(string message)
+    onWarning: {
+        warningDialog.text = message
+        warningDialog.visible = true
+    }
+    Component.onCompleted: {
+        backend.outputReady.connect(window.outputReady)
+        backend.warning.connect(window.warning)
+    }
+
+    MessageDialog {
+        id: warningDialog
+        title: "Warning"
+        text: ""
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok
+        onAccepted: {
+        }
     }
 
     Pane {

@@ -7,7 +7,8 @@ import cv2
 
 
 class Backend(QObject):
-    dataReady = Signal(str, name='dataReady')
+    outputReady = Signal(str, name='outputReady')
+    warning = Signal(str, name='warning')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -18,30 +19,28 @@ class Backend(QObject):
 
     @Slot(str)
     def load_image(self, url):
-        print(url)
         self._input_img = cv2.imread(url[7:])
+        self._output_img = None
 
     @Slot(str)
     def save_image(self, url):
-        print(url)
+        if self._output_img is None:
+            self.warning.emit("Cannot save non-existing output image! To save please make transformation.")
+            return
         cv2.imwrite(url[7:], self._output_img)
 
     @Slot(int)
     def transform_image(self, opt):
+        if self._input_img is None:
+            self.warning.emit("Before transforming, an input image must be loaded!")
+            return
         if opt == 3:
             self.convex_surrounding()
 
     def convex_surrounding(self):
         self._output_img = self._input_img
-        self.image_provider.img = self.make_qimage(self._output_img)
-        self.dataReady.emit("image://imgprovider/data.jpg")
-
-    @staticmethod
-    def make_qimage(img) -> QImage:
-        height, width, channel = img.shape
-        bytes_per_line = 3 * width
-        q_img = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
-        return q_img
+        self.image_provider.img = ImageProvider.make_qimage(self._output_img)
+        self.outputReady.emit("image://imgprovider/data.jpg")
 
 
 class Parameters(QObject):
@@ -110,6 +109,13 @@ class ImageProvider(QQuickImageProvider):
     def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
         print("request")
         return self._image
+
+    @staticmethod
+    def make_qimage(img) -> QImage:
+        height, width, channel = img.shape
+        bytes_per_line = 3 * width
+        q_img = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
+        return q_img
 
     @property
     def img(self):
