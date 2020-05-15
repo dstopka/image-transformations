@@ -4,6 +4,8 @@ from PySide2.QtQml import *
 from PySide2.QtQuick import *
 import numpy as np
 import cv2
+from package.transformations.imtrans import ImageTransform
+import matplotlib.pyplot as plt
 
 
 class Backend(QObject):
@@ -19,7 +21,8 @@ class Backend(QObject):
 
     @Slot(str)
     def load_image(self, url):
-        self._input_img = cv2.imread(url[7:])
+        self._input_img = cv2.imread(url[7:], cv2.IMREAD_UNCHANGED)
+        #self._input_img = cv2.cvtColor(self._input_img, cv2.COLOR_BGR2RGB)
         self._output_img = None
 
     @Slot(str)
@@ -34,13 +37,21 @@ class Backend(QObject):
         if self._input_img is None:
             self.warning.emit("Before transforming, an input image must be loaded!")
             return
-        if opt == 3:
-            self.convex_surrounding()
-
-    def convex_surrounding(self):
-        self._output_img = self._input_img
-        self.image_provider.img = ImageProvider.make_qimage(self._output_img)
-        self.outputReady.emit("image://imgprovider/data.jpg")
+        if opt == 0:
+            #self._output_img = ImageTransform.gauss_hist(self._input_img)
+            self._output_img = self._input_img
+        elif opt == 1:
+            self._output_img = ImageTransform.filt_entropy(self._input_img)
+        elif opt == 2:
+            self._output_img = ImageTransform.imopen(self._input_img)
+        elif opt == 3:
+            self._output_img = ImageTransform.convex_surr(self._input_img)
+        #self._output_img = self._input_img
+        plt.subplot(1, 2, 1), plt.imshow(self._input_img, cmap='gray', vmin=0, vmax=255)
+        plt.subplot(1, 2, 2), plt.imshow(self._output_img, cmap='gray', vmin=0, vmax=255)
+        plt.show()  # To show figure
+        #self.image_provider.make_qimage(self._output_img)
+        #self.outputReady.emit("image://imgprovider/data.jpg")
 
 
 class Parameters(QObject):
@@ -107,15 +118,12 @@ class ImageProvider(QQuickImageProvider):
         self._image = None
 
     def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
-        print("request")
         return self._image
 
-    @staticmethod
-    def make_qimage(img) -> QImage:
-        height, width, channel = img.shape
+    def make_qimage(self, img) -> QImage:
+        height, width = img.shape
         bytes_per_line = 3 * width
-        q_img = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
-        return q_img
+        self._image = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
 
     @property
     def img(self):

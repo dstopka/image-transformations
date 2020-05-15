@@ -1,0 +1,71 @@
+[33mcommit fd2ae86bed6087da089d29b6a577ac81cd9fb376[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Tue May 12 13:02:37 2020 +0200
+
+    Add load and save validation
+
+[33mcommit 0870d55e24f5bc187d1a73e1bceaad490fb4826e[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Tue May 12 12:19:25 2020 +0200
+
+    Add output image saving
+
+[33mcommit 94cd9b72021d68c7c05a227e4d596b81d1f56a69[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Mon May 11 23:41:49 2020 +0200
+
+    Extract Property class from Backend
+
+[33mcommit 67642ab9e11b56c18b24eef836cb5a68ead9eed6[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Mon May 11 22:49:20 2020 +0200
+
+    Add output img display on transform
+
+[33mcommit 9212f43b23c4693052967f2034a9d6254e887695[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Sun May 10 21:03:30 2020 +0200
+
+    Add connected gui with backend
+
+[33mcommit a79dcacefa08031553dc745d0b99c45275b68d0e[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Sun May 10 20:00:29 2020 +0200
+
+    Add new gui
+
+[33mcommit 20351235f545daaec4f0d91a65f03b4f9692680a[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Sun May 10 12:37:37 2020 +0200
+
+    Add image loading
+
+[33mcommit 2e3bcc417a858edb0bb4c048b5d89eba9254e29d[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Fri May 8 21:46:18 2020 +0200
+
+    Add gui with all elements
+
+[33mcommit bdf41987ea667fab2bd99b47f81b1ead5983351e[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Fri May 8 19:25:10 2020 +0200
+
+    Add backend files
+
+[33mcommit b4e1eda83d3f0e73986903fcf457c29df3bd7f3f[m[33m ([m[1;32mfeature-gui[m[33m)[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Fri May 8 17:36:43 2020 +0200
+
+    Add most of the GUI
+
+[33mcommit 8dba499f7232567b785bef24894e10e295f69983[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Fri May 8 01:10:39 2020 +0200
+
+    Add sample gui and gitignore
+
+[33mcommit 653a7ceece535d1af017fccda4ffc53203e15f5b[m
+Author: dstopka <dariusz.marek.stopka@gmail.com>
+Date:   Wed May 6 19:00:51 2020 +0200
+
+    Initial commit
