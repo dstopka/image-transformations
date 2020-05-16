@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 
 class ImageTransform:
     @staticmethod
@@ -16,64 +17,35 @@ class ImageTransform:
 
     @staticmethod
     def convex_surr(img):
-        mask = [[1, 1, 0], [1, -1, 0], [1, 0, -1]]
-        mask = np.asarray(mask)
+        mask0 = np.array([[1, 1, 0], [1, -1, 0], [1, 0, -1]], dtype=np.int)
+        mask45 = np.array([[1, 1, 1], [1, -1, 0], [0, -1, 0]], dtype=np.int)
         compare = np.zeros_like(img)
         while not np.array_equal(img, compare):
             compare = img
-            for i in range(9):
-                img = img | ImageTransform.hit_miss(img, mask)
-                ImageTransform.rotate_mask(mask)
-            ImageTransform.rotate_mask(mask)
+            for i in range(4):
+                img = img | ImageTransform.hit_miss(img, mask0)
+                img = img | ImageTransform.hit_miss(img, mask45)
+                mask0 = np.rot90(mask0)
+                mask45 = np.rot90(mask45)
         return img
 
     @staticmethod
-    def hit_miss(img, mask):
+    def erode(img, mask):
         res = np.zeros_like(img)
-        print(img.shape)
-        for i in range(len(img)):
-            for j in range(len(img[0])):
-                temp_mask = mask
-                if j == 0:
-                    temp_mask = temp_mask[1:]
-                    cut = img[:, j:j+2]
-                elif j == len(img) - 1:
-                    temp_mask = temp_mask[:-1]
-                    cut = img[:, j-1:j+1]
-                else:
-                    cut = img[:, j - 1:j + 2]
-                if i == 0:
-                    temp_mask = temp_mask[:, 1:]
-                    cut = cut[i:i+2, :]
-                elif i == len(img[0]) - 1:
-                    temp_mask = temp_mask[:, :-1]
-                    cut = cut[i-1:i+1, :]
-                else:
-                    cut = cut[i - 1:i + 2, :]
-                res[i, j] = ImageTransform.compare(cut, temp_mask)
+        x, y = img.shape
+        P, Q = mask.shape
+        for i in range(math.ceil(P/2), x-math.floor(P/2)):
+            for j in range(math.ceil(Q / 2), y - math.floor(Q / 2)):
+                on = img[i - math.floor(P / 2):i + math.floor(P / 2)+1, j - math.floor(Q / 2): j + math.floor(Q / 2)+1]
+                bool_idx = (mask == 1)
+                res[i, j] = min(on[bool_idx])
         return res
 
     @staticmethod
-    def compare(a, b):
-        x, y = len(a[0]), len(a)
-        for i in range(x):
-            for j in range(y):
-                if b[i, j] == 1 and a[i, j] != 255:
-                    return 0
-                if b[i, j] == -1 and a[i, j] != 0:
-                    return 0
-        return 255
+    def hit_miss(img, mask):
+        true_mask = mask * (mask == 1)
+        false_mask = mask * (mask == -1) * -1
+        res = ImageTransform.erode(img, true_mask) & ImageTransform.erode(~img, false_mask)
+        return res
 
-    @staticmethod
-    def rotate_mask(mask):
-        rows, columns = (len(mask), len(mask[0]))
-        border = mask[0] + [i[-1] for i in mask[1:-1]] + list(reversed(mask[-1])) + [i[0] for i in mask[-2:0:-1]]
-        np.insert(border, 0, border[-1])
-        border = border[:-1]
-        for i in range(columns):
-            mask[0][i] = border[i]
-            mask[-1][-(1+i)] = border[i + rows + columns - 2]
-        for i in range(rows - 1):
-            mask[i][-1] = border[columns + i - 1]
-            mask[-(1 + i)][0] = border[-rows + i + 1]
 
