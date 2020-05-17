@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 
 
-def img_type(src_image):
+def image_type(src_image):
     """
     This method checks what type the source image is based
     on number of channels and pixel values
@@ -121,100 +121,159 @@ def match_histograms_rgb(src_image, ref_hist):
     return res
 
 
-def histogram_match(source, std):
-    # calculate normal distribution histogram
-    gauss_values = np.zeros(256)
+def histogram_matching(src_image, std):
+    """
+    This method performs histogram matching of
+    the source image and the reference normal distribution
+    of specified standard deviation
+    :param np.array src_image: The original source image
+    :param int  std: The value of the standard deviation
+    :return: matched_image: The image after matching
+    :rtype: np.array
+    """
+    # Calculate normal distribution histogram
+    normal_distribution = np.zeros(256)
     for i in range(256):
-        gauss_values[i] = math.exp(-(i / 255 - 0.5) ** 2 / (2 * std * std))
+        normal_distribution[i] = math.exp(-(i / 255 - 0.5) ** 2 / (2 * std * std))
 
-    # check if mono or rgb
-    source_type = img_type(source)
+    # Check if mono or rgb
+    source_type = image_type(src_image)
     if source_type == 'mono' or source_type == 'binary':
-        res = match_histograms_mono(source, gauss_values)
+        matched_image = match_histograms_mono(src_image, normal_distribution)
     else:
-        res = match_histograms_rgb(source, gauss_values)
+        matched_image = match_histograms_rgb(src_image, normal_distribution)
 
-    return res
+    return matched_image
 
 
 def filt_entropy(img):
     pass
 
 
-def imopen(img, se_length, se_angle):
-    # create linear se
+def imopen(src_image, se_length, se_angle):
+    """
+    This method performs image opening based on
+    the angled linear structuring element created
+    based on given values
+    :param np.array src_image: The original source image
+    :param int se_length: The structuring element length
+    :param int se_angle: The structuring element angle
+    :return: result_image: The image after opening
+    :rtype: np.array
+    """
+    # Create linear se
     se = liner_se(se_length, se_angle)
 
-    # perform dilation over erosion
-    return dilate(erode(img, se), se)
+    # Compute dilation over erosion
+    result_image = dilate(erode(src_image, se), se)
+
+    return result_image
 
 
-def convex_hull(source):
+def convex_hull(src_image):
+    """
+    This method computes convex hull
+    on the input image
+    :param np.array src_image: The original source image
+    :return: result_image: The image after convex hull
+    :rtype: np.array
+    """
     # create structural elements
     se_0deg = np.array([[1, 1, 0], [1, -1, 0], [1, 0, -1]], dtype=np.int)
     se_45deg = np.array([[1, 1, 1], [1, -1, 0], [0, -1, 0]], dtype=np.int)
 
     # allocate comparison image to enter while
-    compare = np.zeros_like(source)
-
+    compare = np.zeros_like(src_image)
+    result_image = src_image
     # perform hit-or-miss until no change
-    while not np.array_equal(source, compare):
-        compare = source
+    while not np.array_equal(result_image, compare):
+        compare = result_image
 
         # hit-or-miss for each se position
         for i in range(4):
-            source = source | hit_miss(source, se_0deg)
-            source = source | hit_miss(source, se_45deg)
+            result_image = result_image | hit_miss(result_image, se_0deg)
+            result_image = result_image | hit_miss(result_image, se_45deg)
             se_0deg = np.rot90(se_0deg)
             se_45deg = np.rot90(se_45deg)
 
-    return source
+    return result_image
 
 
-def erode(img, mask):
-    res = np.zeros_like(img)
-    # x, y = img.shape
-    # P, Q = mask.shape
-    img_width, img_height = img.shape[:2]
-    mask_x, mask_y = mask.shape[:2]
+def erode(src_image, se):
+    """
+    This method performs morphological erosion
+    based on given structuring element
+    :param np.array src_image: The original source image
+    :param np.array se: The structuring element
+    :return: result_image: The image after erosion
+    :rtype: np.array
+    """
+    result_image = np.zeros_like(src_image)
+    img_width, img_height = src_image.shape[:2]
+    mask_x, mask_y = se.shape[:2]
     mask_half_x = math.floor(mask_x / 2)
     mask_half_y = math.floor(mask_y / 2)
     for i in range(math.ceil(mask_x / 2), img_width - math.floor(mask_x / 2)):
         for j in range(math.ceil(mask_y / 2), img_height - mask_half_y):
-            on = img[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
-            bool_idx = (mask == 1)
-            res[i, j] = min(on[bool_idx])
-    return res
+            on = src_image[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
+            bool_idx = (se == 1)
+            result_image[i, j] = min(on[bool_idx])
+
+    return result_image
 
 
-def dilate(img, mask):
-    res = np.zeros_like(img)
-    # x, y = img.shape
-    # P, Q = mask.shape
-    img_width, img_height = img.shape[:2]
-    mask_x, mask_y = mask.shape[:2]
+def dilate(src_image, se):
+    """
+    This method performs morphological dilation
+    based on given structuring element
+    :param np.array src_image: The original source image
+    :param np.array se: The structuring element
+    :return: result_image: The image after dilation
+    :rtype: np.array
+    """
+    result_image = np.zeros_like(src_image)
+    img_width, img_height = src_image.shape[:2]
+    mask_x, mask_y = se.shape[:2]
     mask_half_x = math.floor(mask_x / 2)
     mask_half_y = math.floor(mask_y / 2)
     for i in range(math.ceil(mask_x / 2), img_width - math.floor(mask_x / 2)):
         for j in range(math.ceil(mask_y / 2), img_height - mask_half_y):
-            on = img[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
-            bool_idx = (mask == 1)
-            res[i, j] = max(on[bool_idx])
-    return res
+            on = src_image[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
+            bool_idx = (se == 1)
+            result_image[i, j] = max(on[bool_idx])
+
+    return result_image
 
 
-def hit_miss(img, mask):
+def hit_miss(src_image, se):
+    """
+    This method performs hit-or-miss operation
+    based on given structuring element
+    using logical and of two erosion
+    :param np.array src_image: The original source image
+    :param np.array se: The structuring element
+    :return: result_image: The image after dilation
+    :rtype: np.array
+    """
     # create mask [0, 1] from [-1, 0, 1]
-    true_mask = mask * (mask == 1)
-    false_mask = mask * (mask == -1) * -1
+    true_mask = se * (se == 1)
+    false_mask = se * (se == -1) * -1
 
     # perform two erosion to get hit-or-miss
-    res = erode(img, true_mask) & erode(~img, false_mask)
+    result_image = erode(src_image, true_mask) & erode(~src_image, false_mask)
 
-    return res
+    return result_image
 
 
 def liner_se(length, angle):
+    """
+    This method creates linear structuring element
+    of given length and angle
+    :param int length: The structuring element length
+    :param int angle: The structuring element angle
+    :return: result_se: The crated SE
+    :rtype: np.array
+    """
     theta = math.radians(angle)
     dx = abs(math.cos(theta))
     dy = abs(math.sin(theta))
@@ -227,18 +286,29 @@ def liner_se(length, angle):
     n2y = round((lgy - 1) / 2)
     ny = 2 * n2y + 1
 
-    mask = np.zeros([ny, nx])
+    result_se = np.zeros([ny, nx])
     if math.cos(theta) >= 0:
-        el = bresenham(0, ny - 1, nx - 1, 0)
+        points = bresenham(0, ny - 1, nx - 1, 0)
     else:
-        el = bresenham(nx - 1, ny - 1, 0, 0)
-    for x in el:
-        mask[x[1], x[0]] = 1
+        points = bresenham(nx - 1, ny - 1, 0, 0)
 
-    return mask
+    for x in points:
+        result_se[x[1], x[0]] = 1
+
+    return result_se
 
 
 def bresenham(x1, y1, x2, y2):
+    """
+    This method performs bresenham algorithm of
+    creating line between two points
+    :param int x1: The first point x coordinate
+    :param int y1: The first point y coordinate
+    :param int x2: The second point x coordinate
+    :param int y2: The second point y coordinate
+    :return: points: indexes of line points
+    :rtype: np.array
+    """
     dx = x2 - x1
     dy = y2 - y1
     is_steep = abs(dy) > abs(dx)

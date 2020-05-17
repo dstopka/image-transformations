@@ -40,7 +40,7 @@ class Backend(QObject):
         if opt == 0:
             #self._output_img = ImageTransform.gauss_hist(self._input_img)
             self._output_img = self._input_img
-            ImageTransform.histogram_match(self._input_img, self.parameters.deviation)
+            ImageTransform.histogram_matching(self._input_img, self.parameters.deviation)
         elif opt == 1:
             self._output_img = ImageTransform.filt_entropy(self._input_img)
         elif opt == 2:
