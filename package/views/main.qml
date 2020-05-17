@@ -26,6 +26,7 @@ ApplicationWindow {
     onOutputReady: {
         console.log(s)
         outputImage.source = s
+        console.log(outputImage.source)
     }
     signal warning(string message)
     onWarning: {

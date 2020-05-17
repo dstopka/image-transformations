@@ -4,7 +4,8 @@ from PySide2.QtQml import *
 from PySide2.QtQuick import *
 import numpy as np
 import cv2
-from package.transformations.imtrans import ImageTransform
+import random
+from package.transformations.imtrans import *
 import matplotlib.pyplot as plt
 
 
@@ -18,12 +19,13 @@ class Backend(QObject):
         self._output_img = None
         self.parameters = Parameters()
         self.image_provider = ImageProvider()
+        self._count = 0
 
     @Slot(str)
     def load_image(self, url):
         self._input_img = cv2.imread(url[7:], cv2.IMREAD_UNCHANGED)
-        #self._input_img = cv2.cvtColor(self._input_img, cv2.COLOR_BGR2RGB)
         self._output_img = None
+        self.outputReady.emit("")
 
     @Slot(str)
     def save_image(self, url):
@@ -37,23 +39,19 @@ class Backend(QObject):
         if self._input_img is None:
             self.warning.emit("Before transforming, an input image must be loaded!")
             return
+        self.outputReady.emit("")
         if opt == 0:
-            #self._output_img = ImageTransform.gauss_hist(self._input_img)
-            self._output_img = self._input_img
-            ImageTransform.histogram_matching(self._input_img, self.parameters.deviation)
+            self._output_img = histogram_matching(self._input_img, self.parameters.deviation)
+            self.image_provider.make_qimage(self._output_img)
         elif opt == 1:
-            self._output_img = ImageTransform.filt_entropy(self._input_img)
+            self._output_img = filt_entropy(self._input_img)
         elif opt == 2:
-            #ImageTransform.liner_se(self.parameters.length, self.parameters.angle)
-            self._output_img = ImageTransform.imopen(self._input_img, self.parameters.length, self.parameters.angle)
+            self._output_img = imopen(self._input_img, self.parameters.length, self.parameters.angle)
         elif opt == 3:
-            self._output_img = ImageTransform.convex_hull(self._input_img)
-        #self._output_img = self._input_img
-        # plt.subplot(1, 2, 1), plt.imshow(self._input_img, cmap='gray', vmin=0, vmax=255)
-        # plt.subplot(1, 2, 2), plt.imshow(self._output_img, cmap='gray', vmin=0, vmax=255)
-        # plt.show()  # To show figure
+            self._output_img = convex_hull(self._input_img)
+        self._count += 1
         self.image_provider.make_qimage(self._output_img)
-        self.outputReady.emit("image://imgprovider/data.jpg")
+        self.outputReady.emit("image://imgprovider/output" + str(self._count))
 
 
 class Parameters(QObject):
@@ -124,8 +122,11 @@ class ImageProvider(QQuickImageProvider):
 
     def make_qimage(self, img) -> QImage:
         height, width = img.shape[:2]
-        bytes_per_line = 3 * width
-        self._image = QImage(img.data, width, height, width, QImage.Format_Grayscale8)
+        if image_type(img) == 'BGR':
+            bytes_per_line = 3 * width
+            self._image = QImage(img.data, width, height, bytes_per_line, QImage.Format_RGB888).rgbSwapped()
+        else:
+            self._image = QImage(img.data, width, height, width, QImage.Format_Grayscale8)
 
     @property
     def img(self):

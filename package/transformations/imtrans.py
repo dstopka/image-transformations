@@ -38,7 +38,6 @@ def calculate_cdf(histogram):
 
     # Normalize the cdf
     normalized_cdf = cdf / cdf[-1]
-
     return normalized_cdf
 
 
@@ -50,15 +49,18 @@ def calculate_lookup(src_cdf, ref_cdf):
     :return: lookup_table : The lookup table
     :rtype: np.array
     """
+    n = 0
+    max_n = 10
     lookup_table = np.zeros(256)
-    lookup_val = 0
-    for src_pixel_val in range(len(src_cdf)):
-        for ref_pixel_val in range(len(ref_cdf)):
-            if ref_cdf[ref_pixel_val] >= src_cdf[src_pixel_val]:
-                lookup_val = ref_pixel_val
-                break
-        lookup_table[src_pixel_val] = lookup_val
+    for idx in range(256):
+        if src_cdf[idx] >= ref_cdf[round(255 / max_n * (n + 1))]:
+            n += 1
+            if n >= max_n:
+                n = max_n - 1
+        lookup_table[idx] = int(((256 - 1) * n) / max_n)
+
     return lookup_table
+
 
 
 def match_histograms_mono(src_image, ref_hist):
@@ -76,6 +78,8 @@ def match_histograms_mono(src_image, ref_hist):
     # Calculate normalized cumulative distribution functions
     src_cdf = calculate_cdf(src_hist)
     ref_cdf = calculate_cdf(ref_hist)
+
+    t = np.linspace(0, 1, 256)
 
     # Calculate lookup table
     lookup_table = calculate_lookup(src_cdf, ref_cdf)
@@ -134,7 +138,7 @@ def histogram_matching(src_image, std):
     # Calculate normal distribution histogram
     normal_distribution = np.zeros(256)
     for i in range(256):
-        normal_distribution[i] = math.exp(-(i / 255 - 0.5) ** 2 / (2 * std * std))
+        normal_distribution[i] = math.exp(-(i / 255 - 0.5) ** 2 / (2 * std * std)) / 10
 
     # Check if mono or rgb
     source_type = image_type(src_image)
