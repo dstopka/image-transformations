@@ -40,6 +40,7 @@ class Backend(QObject):
         if opt == 0:
             #self._output_img = ImageTransform.gauss_hist(self._input_img)
             self._output_img = self._input_img
+            ImageTransform.gauss_hist(self._input_img, self.parameters.deviation)
         elif opt == 1:
             self._output_img = ImageTransform.filt_entropy(self._input_img)
         elif opt == 2:
@@ -113,6 +114,8 @@ class Parameters(QObject):
         self.angleChanged.emit(self._angle)
 
 
+
+
 class ImageProvider(QQuickImageProvider):
     def __init__(self):
         super().__init__(QQuickImageProvider.Image)
@@ -122,7 +125,7 @@ class ImageProvider(QQuickImageProvider):
         return self._image
 
     def make_qimage(self, img) -> QImage:
-        height, width = img.shape
+        height, width = img.shape[:2]
         bytes_per_line = 3 * width
         self._image = QImage(img.data, width, height, width, QImage.Format_Grayscale8)
 

@@ -1,11 +1,80 @@
 import numpy as np
 import cv2
 import math
+import matplotlib.pyplot as plt
+
+
+def calculate_cdf(histogram):
+    cdf = histogram.cumsum()
+    normalized_cdf = cdf / cdf[-1]
+    return normalized_cdf
+
+
+def calculate_lookup(src_cdf, ref_cdf):
+    lookup_table = np.zeros(256)
+    lookup_val = 0
+    for src_pixel_val in range(len(src_cdf)):
+        for ref_pixel_val in range(len(ref_cdf)):
+            if ref_cdf[ref_pixel_val] >= src_cdf[src_pixel_val]:
+                lookup_val = ref_pixel_val
+                break
+        lookup_table[src_pixel_val] = lookup_val
+    return lookup_table
+
+
+def match_histograms(src_image, ref_hist):
+    src_hist, bin = np.histogram(src_image.flatten(), 256, [0, 256])
+    plt.subplot(2, 2, 3)
+    plt.bar(range(0, 256), src_hist)
+    src_cdf = calculate_cdf(src_hist)
+    ref_cdf = calculate_cdf(ref_hist)
+    # plt.subplot(2, 2, 1), plt.bar(range(0, 256), src_cdf)
+    # plt.subplot(2, 2, 2), plt.bar(range(0, 256), ref_cdf)
+    # plt.show()  # To show figure
+    lookup_table = calculate_lookup(src_cdf, ref_cdf)
+    lut_image = [[lookup_table[x] for x in y] for y in src_image]
+    return np.array(lut_image)
+
+
+def mono_condition(i, hist):
+    if i < 0:
+        hist[0] += 1
+        return 0
+    if i >= 256:
+        hist[256 - 1] += 1
+        return 256 - 1
+    hist[i] += 1
+    return i
+
 
 class ImageTransform:
     @staticmethod
-    def gauss_hist(img):
-        gauss = np.random.normal()
+    def gauss_hist(source, stdd):
+        std = stdd
+        gauss_values = np.zeros(256)
+        for i in range(256):
+            gauss_values[i] = math.exp(-(i / 255 - 0.5)**2 / (2 * std * std))
+        # plt.bar(range(0, 256), gauss_values)
+        # plt.subplot(2, 2, 4), plt.bar(range(0, 256), gauss_values)
+        # plt.subplot(2, 2, 3), plt.bar(range(0, 256), gauss_values)
+        res = match_histograms(source, gauss_values)
+        src_hist1, bin1 = np.histogram(res.flatten(), 256, [0, 256])
+        plt.subplot(2, 2, 1), plt.imshow(source, cmap='gray', vmin=0, vmax=255)
+        plt.subplot(2, 2, 2), plt.imshow(res, cmap='gray', vmin=0, vmax=255)
+        plt.subplot(2, 2, 4), plt.bar(range(0, 256), src_hist1)
+        # plt.subplot(2, 2, 3), plt.bar(range(0, 256), gauss_values)
+        plt.show()
+
+
+    @staticmethod
+    def cdf(h):
+        n = np.sum(h)
+        c = 0
+        P = []
+        for i in range(len(h)):
+            c += h[i]
+            P.append(c / n)
+        return P
 
     @staticmethod
     def filt_entropy(img):
