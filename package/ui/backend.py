@@ -44,7 +44,7 @@ class Backend(QObject):
             self._output_img = histogram_matching(self._input_img, self.parameters.deviation)
             self.image_provider.make_qimage(self._output_img)
         elif opt == 1:
-            self._output_img = filt_entropy(self._input_img)
+            self._output_img = filt_entropy(self._input_img, self.parameters.mask_size)
         elif opt == 2:
             self._output_img = imopen(self._input_img, self.parameters.length, self.parameters.angle)
         elif opt == 3:
@@ -84,9 +84,9 @@ class Parameters(QObject):
 
     @mask_size.setter
     def set_mask_size(self, mask_size):
-        if self._maskSize == float(mask_size):
+        if self._maskSize == int(mask_size):
             return
-        self._maskSize = float(mask_size)
+        self._maskSize = int(mask_size)
         self.maskSizeChanged.emit(self._maskSize)
 
     @Property(str, notify=lengthChanged)

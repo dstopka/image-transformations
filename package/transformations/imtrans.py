@@ -13,9 +13,9 @@ def image_type(src_image):
     :rtype: str
     """
     try:
-        width, height, channels = src_image.shape
+        height, width, channels = src_image.shape
     except ValueError:
-        width, height = src_image.shape
+        height, width = src_image.shape
         channels = None
     if channels:
         return 'BGR'
@@ -41,6 +41,21 @@ def calculate_cdf(histogram):
     return normalized_cdf
 
 
+def calculate_histogram(src_channel):
+    """
+    This method calculates the histogram of given image channel
+    as a flat array
+    :param np.array src_channel: The image channel
+    :return: histogram : The histogram
+    :rtype: np.array
+    """
+    histogram = np.zeros(256)
+    for y in src_channel:
+        histogram[y] += 1
+
+    return histogram
+
+
 def calculate_lookup(src_cdf, ref_cdf):
     """
     This method creates the lookup table
@@ -57,10 +72,9 @@ def calculate_lookup(src_cdf, ref_cdf):
             n += 1
             if n >= max_n:
                 n = max_n - 1
-        lookup_table[idx] = int(((256 - 1) * n) / max_n)
+        lookup_table[idx] = int(((256 - 1) * n) / (max_n - 1))
 
     return lookup_table
-
 
 
 def match_histograms_mono(src_image, ref_hist):
@@ -73,20 +87,20 @@ def match_histograms_mono(src_image, ref_hist):
     :rtype: np.array
     """
     # Calculate image histogram
-    src_hist, bin = np.histogram(src_image.flatten(), 256, [0, 256])
-
+    src_hist = calculate_histogram(src_image.flatten())
     # Calculate normalized cumulative distribution functions
     src_cdf = calculate_cdf(src_hist)
     ref_cdf = calculate_cdf(ref_hist)
-
-    t = np.linspace(0, 1, 256)
 
     # Calculate lookup table
     lookup_table = calculate_lookup(src_cdf, ref_cdf)
 
     # Match source with lookup table
     matched_image = np.array([[lookup_table[x] for x in y] for y in src_image], dtype=np.uint8)
-
+    hist_m = calculate_histogram(matched_image)
+    plt.bar(range(256), hist_m)
+    plt.show()
+    # print(matched_image[:1, :])
     return matched_image
 
 
@@ -105,9 +119,9 @@ def match_histograms_rgb(src_image, ref_hist):
     src_r = src_image[:, :, 2]
 
     # Calculate image histograms
-    src_hist_blue, bins = np.histogram(src_b.flatten(), 256, [0, 256])
-    src_hist_green, bins = np.histogram(src_g.flatten(), 256, [0, 256])
-    src_hist_red, bins = np.histogram(src_r.flatten(), 256, [0, 256])
+    src_hist_blue = calculate_histogram(src_b.flatten())
+    src_hist_green = calculate_histogram(src_g.flatten())
+    src_hist_red = calculate_histogram(src_r.flatten())
 
     # Calculate normalized cumulative distribution functions
     src_cdf_blue = calculate_cdf(src_hist_blue)
@@ -150,8 +164,72 @@ def histogram_matching(src_image, std):
     return matched_image
 
 
-def filt_entropy(img):
-    pass
+# def filt_entropy(src_image, mask_size):
+#     result_image = np.zeros_like(src_image)
+#     img_width, img_height = src_image.shape[:2]
+#     mask_area = mask_size**2
+#     mask_half = math.floor(mask_size / 2)
+#     for i in range(math.ceil(mask_size / 2), img_width - mask_half):
+#         for j in range(math.ceil(mask_size / 2), img_height - mask_half):
+#             on = src_image[i - mask_half:i + mask_half + 1, j - mask_half: j + mask_half + 1]
+#             histogram = (calculate_histogram(on[:, :, 0].flatten()) +
+#                                 calculate_histogram(on[:, :, 1].flatten()) +
+#                                 calculate_histogram(on[:, :, 2].flatten())) / (mask_area * 3)
+#             histogram = list(filter(lambda p: p > 0, histogram))
+#             entropy = -np.sum(np.multiply(histogram, np.log2(histogram)))
+#             print("img[%r, %r] = %r" % (i, j, entropy))
+#             result_image[i, j] = entropy
+#     plt.subplot(1, 2, 1)
+#     plt.imshow(src_image)
+#
+#     plt.subplot(1, 2, 2)
+#     plt.imshow(result_image, cmap=plt.cm.jet)
+#     plt.show()
+#     return result_image
+
+def filt_entropy(src_image, mask_size):
+    print(mask_size)
+
+    img_height, img_width = src_image.shape[:2]
+    result_image = np.zeros((img_height, img_width))
+    mask_area = mask_size**2
+    mask_half = math.floor(mask_size / 2)
+    max_entropy = 0
+    for i in range(img_height):
+        for j in range(img_width):
+            Lx = np.max([0, j - mask_size])
+            Ux = np.min([img_width, j + mask_size])
+            Ly = np.max([0, i - mask_size])
+            Uy = np.min([img_height, i + mask_size])
+            region = src_image[Ly:Uy, Lx:Ux]
+            res = entropy(region)
+            max_entropy = res if res > max_entropy else max_entropy
+            result_image[i, j] = res
+
+    result_image = result_image / max_entropy * 255
+    result_image = result_image.astype(np.uint8)
+    plt.subplot(1, 2, 1)
+    plt.imshow(src_image)
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(result_image, cmap='gray', vmin=0, vmax=255)
+    plt.show()
+    print(src_image.shape)
+    print(result_image.shape)
+    return result_image
+
+
+def entropy(region):
+    if image_type(region) == 'BGR':
+        histogram = (calculate_histogram(region[:, :, 0].flatten()) +
+                    calculate_histogram(region[:, :, 1].flatten()) +
+                    calculate_histogram(region[:, :, 2].flatten())) / 243
+        #print(len(region[:, :, 0].flatten()))
+    else:
+        histogram = calculate_histogram(region.flatten()) / 81
+    histogram = list(filter(lambda p: p > 0, histogram))
+    res = -np.sum(np.multiply(histogram, np.log2(histogram)))
+    return res
 
 
 def imopen(src_image, se_length, se_angle):
