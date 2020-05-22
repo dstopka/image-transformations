@@ -164,37 +164,20 @@ def histogram_matching(src_image, std):
     return matched_image
 
 
-# def filt_entropy(src_image, mask_size):
-#     result_image = np.zeros_like(src_image)
-#     img_width, img_height = src_image.shape[:2]
-#     mask_area = mask_size**2
-#     mask_half = math.floor(mask_size / 2)
-#     for i in range(math.ceil(mask_size / 2), img_width - mask_half):
-#         for j in range(math.ceil(mask_size / 2), img_height - mask_half):
-#             on = src_image[i - mask_half:i + mask_half + 1, j - mask_half: j + mask_half + 1]
-#             histogram = (calculate_histogram(on[:, :, 0].flatten()) +
-#                                 calculate_histogram(on[:, :, 1].flatten()) +
-#                                 calculate_histogram(on[:, :, 2].flatten())) / (mask_area * 3)
-#             histogram = list(filter(lambda p: p > 0, histogram))
-#             entropy = -np.sum(np.multiply(histogram, np.log2(histogram)))
-#             print("img[%r, %r] = %r" % (i, j, entropy))
-#             result_image[i, j] = entropy
-#     plt.subplot(1, 2, 1)
-#     plt.imshow(src_image)
-#
-#     plt.subplot(1, 2, 2)
-#     plt.imshow(result_image, cmap=plt.cm.jet)
-#     plt.show()
-#     return result_image
-
-def filt_entropy(src_image, mask_size):
-    print(mask_size)
+def entropy_filter(src_image, mask_size):
+    """
+    This method creates the entropy filter on
+    the given source image with the mask
+    of the given size
+    :param np.array src_image: The source image
+    :param int mask_size: The size of the mask
+    :return: result_image: The image after filtering
+    :rtype: np.array
+    """
 
     img_height, img_width = src_image.shape[:2]
     result_image = np.zeros((img_height, img_width))
-    mask_area = mask_size**2
-    mask_half = math.floor(mask_size / 2)
-    max_entropy = 0
+    # max_entropy = 0
     for i in range(img_height):
         for j in range(img_width):
             Lx = np.max([0, j - mask_size])
@@ -203,33 +186,38 @@ def filt_entropy(src_image, mask_size):
             Uy = np.min([img_height, i + mask_size])
             region = src_image[Ly:Uy, Lx:Ux]
             res = entropy(region)
-            max_entropy = res if res > max_entropy else max_entropy
+            # max_entropy = res if res > max_entropy else max_entropy
             result_image[i, j] = res
 
-    result_image = result_image / max_entropy * 255
+    # result_image = result_image / max_entropy * 255
+    result_image = result_image / max(result_image.flatten()) * 255
     result_image = result_image.astype(np.uint8)
-    plt.subplot(1, 2, 1)
-    plt.imshow(src_image)
 
-    plt.subplot(1, 2, 2)
-    plt.imshow(result_image, cmap='gray', vmin=0, vmax=255)
-    plt.show()
-    print(src_image.shape)
-    print(result_image.shape)
     return result_image
 
 
 def entropy(region):
+    """
+    This method calculates entropy in
+    the given region of the source image
+    :param np.array region: The region to calculate entropy in
+    :return: entropy_value: The value of the entropy
+    :rtype: float
+    """
+
+    # calculate histograms of all channels
     if image_type(region) == 'BGR':
         histogram = (calculate_histogram(region[:, :, 0].flatten()) +
                     calculate_histogram(region[:, :, 1].flatten()) +
                     calculate_histogram(region[:, :, 2].flatten())) / 243
-        #print(len(region[:, :, 0].flatten()))
     else:
         histogram = calculate_histogram(region.flatten()) / 81
+
+    # calculate the entropy
     histogram = list(filter(lambda p: p > 0, histogram))
-    res = -np.sum(np.multiply(histogram, np.log2(histogram)))
-    return res
+    entropy_value = -np.sum(np.multiply(histogram, np.log2(histogram)))
+
+    return entropy_value
 
 
 def imopen(src_image, se_length, se_angle):
@@ -267,6 +255,7 @@ def convex_hull(src_image):
     # allocate comparison image to enter while
     compare = np.zeros_like(src_image)
     result_image = src_image
+
     # perform hit-or-miss until no change
     while not np.array_equal(result_image, compare):
         compare = result_image

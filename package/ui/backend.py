@@ -44,7 +44,7 @@ class Backend(QObject):
             self._output_img = histogram_matching(self._input_img, self.parameters.deviation)
             self.image_provider.make_qimage(self._output_img)
         elif opt == 1:
-            self._output_img = filt_entropy(self._input_img, self.parameters.mask_size)
+            self._output_img = entropy_filter(self._input_img, self.parameters.mask_size)
         elif opt == 2:
             self._output_img = imopen(self._input_img, self.parameters.length, self.parameters.angle)
         elif opt == 3:
