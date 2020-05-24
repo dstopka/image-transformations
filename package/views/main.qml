@@ -137,7 +137,7 @@ ApplicationWindow {
                     Image {
                         id: outputImage
                         Material.elevation: paneElevation
-                        width: (parent.width- 10) / 2
+                        width: (parent.width - 10) / 2
                         fillMode: Image.PreserveAspectFit
                         source: ""
                     }
@@ -269,6 +269,14 @@ ApplicationWindow {
                         Material.elevation: controlsElevation
                         text: qsTr("Value:") + angleSlider.value
                         anchors.left: parent.left
+                    }
+                    Button {
+                        id: startButton
+                        Material.foreground: controlsBackground
+                        Material.elevation: controlsElevation
+                        width: parent.width
+                        text: qsTr("START")
+                        onClicked: {backend.transform_image(optionCombo.currentIndex)}
                     }
                     Button {
                         id: startButton

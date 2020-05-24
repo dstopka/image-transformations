@@ -34,6 +34,10 @@ class Backend(QObject):
             return
         cv2.imwrite(url[7:], self._output_img)
 
+    @Slot()
+    def show_histograms(self):
+        pass
+
     @Slot(int)
     def transform_image(self, opt):
         if self._input_img is None:
@@ -42,13 +46,13 @@ class Backend(QObject):
         self.outputReady.emit("")
         if opt == 0:
             self._output_img = histogram_matching(self._input_img, self.parameters.deviation)
-            self.image_provider.make_qimage(self._output_img)
         elif opt == 1:
             self._output_img = entropy_filter(self._input_img, self.parameters.mask_size)
         elif opt == 2:
             self._output_img = imopen(self._input_img, self.parameters.length, self.parameters.angle)
         elif opt == 3:
             self._output_img = convex_hull(self._input_img)
+
         self._count += 1
         self.image_provider.make_qimage(self._output_img)
         self.outputReady.emit("image://imgprovider/output" + str(self._count))

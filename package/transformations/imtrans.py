@@ -174,23 +174,23 @@ def entropy_filter(src_image, mask_size):
     :return: result_image: The image after filtering
     :rtype: np.array
     """
-
+    mask_half = math.floor(mask_size/2)
     img_height, img_width = src_image.shape[:2]
     result_image = np.zeros((img_height, img_width))
-    # max_entropy = 0
+
     for i in range(img_height):
         for j in range(img_width):
-            Lx = np.max([0, j - mask_size])
-            Ux = np.min([img_width, j + mask_size])
-            Ly = np.max([0, i - mask_size])
-            Uy = np.min([img_height, i + mask_size])
+            Lx = np.max([0, j - mask_half])
+            Ux = np.min([img_width, j + mask_half])
+            Ly = np.max([0, i - mask_half])
+            Uy = np.min([img_height, i + mask_half])
             region = src_image[Ly:Uy, Lx:Ux]
             res = entropy(region)
-            # max_entropy = res if res > max_entropy else max_entropy
             result_image[i, j] = res
 
-    # result_image = result_image / max_entropy * 255
-    result_image = result_image / max(result_image.flatten()) * 255
+    min_entropy = min(result_image.flatten())
+    max_entropy = max(result_image.flatten())
+    result_image = (result_image - min_entropy) / (max_entropy - min_entropy) * 255
     result_image = result_image.astype(np.uint8)
 
     return result_image
@@ -209,13 +209,13 @@ def entropy(region):
     if image_type(region) == 'BGR':
         histogram = (calculate_histogram(region[:, :, 0].flatten()) +
                     calculate_histogram(region[:, :, 1].flatten()) +
-                    calculate_histogram(region[:, :, 2].flatten())) / 243
+                    calculate_histogram(region[:, :, 2].flatten())) / (region.shape[0] * region.shape[1] * 3)
     else:
-        histogram = calculate_histogram(region.flatten()) / 81
+        histogram = calculate_histogram(region.flatten()) / (region.shape[0] * region.shape[1])
 
     # calculate the entropy
     histogram = list(filter(lambda p: p > 0, histogram))
-    entropy_value = -np.sum(np.multiply(histogram, np.log2(histogram)))
+    entropy_value = -np.sum(np.multiply(np.log(histogram), histogram))
 
     return entropy_value
 
