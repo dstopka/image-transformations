@@ -1,10 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtQml import *
 from PySide2.QtQuick import *
-import numpy as np
-import cv2
-import random
 from package.transformations.imtrans import *
 import matplotlib.pyplot as plt
 
@@ -56,6 +52,49 @@ class Backend(QObject):
         self._count += 1
         self.image_provider.make_qimage(self._output_img)
         self.outputReady.emit("image://imgprovider/output" + str(self._count))
+
+    @Slot()
+    def show_histograms(self):
+        if self._input_img is None:
+            self.warning.emit("No image to show histogram!")
+            return
+        elif self._output_img is None:
+            input_type = image_type(self._input_img)
+            if input_type == 'BGR':
+                hist_blue = calculate_histogram(self._input_img[:, :, 0])
+                hist_green = calculate_histogram(self._input_img[:, :, 1])
+                hist_red = calculate_histogram(self._input_img[:, :, 2])
+                plt.subplot(131), plt.title("Red"), plt.bar(range(256), hist_red)
+                plt.subplot(132), plt.title("Green"), plt.bar(range(256), hist_green)
+                plt.subplot(133), plt.title("Blue"), plt.bar(range(256), hist_blue)
+            else:
+                hist = calculate_histogram(self._input_img)
+                plt.title("Mono"), plt.bar(range(256), hist)
+        else:
+            input_type = image_type(self._input_img)
+            if input_type == 'BGR':
+                hist_blue = calculate_histogram(self._input_img[:, :, 0])
+                hist_green = calculate_histogram(self._input_img[:, :, 1])
+                hist_red = calculate_histogram(self._input_img[:, :, 2])
+                plt.subplot(231), plt.title("Input Red"), plt.bar(range(256), hist_red)
+                plt.subplot(232), plt.title("Input Green"), plt.bar(range(256), hist_green)
+                plt.subplot(233), plt.title("Input Blue"), plt.bar(range(256), hist_blue)
+            else:
+                hist = calculate_histogram(self._input_img)
+                plt.subplot(231), plt.title("Input Mono"), plt.bar(range(256), hist)
+            output_type = image_type(self._output_img)
+            if output_type == 'BGR':
+                hist_blue = calculate_histogram(self._output_img[:, :, 0])
+                hist_green = calculate_histogram(self._output_img[:, :, 1])
+                hist_red = calculate_histogram(self._output_img[:, :, 2])
+                plt.subplot(234), plt.title("Output Red"), plt.bar(range(256), hist_red)
+                plt.subplot(235), plt.title("Output Green"), plt.bar(range(256), hist_green)
+                plt.subplot(236), plt.title("Output Blue"), plt.bar(range(256), hist_blue)
+            else:
+                hist = calculate_histogram(self._output_img)
+                plt.subplot(234), plt.title("Output Mono"), plt.bar(range(256), hist)
+
+        plt.show()
 
 
 class Parameters(QObject):

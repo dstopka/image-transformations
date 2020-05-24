@@ -1,7 +1,5 @@
 import numpy as np
-import cv2
 import math
-import matplotlib.pyplot as plt
 
 
 def image_type(src_image):
@@ -97,10 +95,7 @@ def match_histograms_mono(src_image, ref_hist):
 
     # Match source with lookup table
     matched_image = np.array([[lookup_table[x] for x in y] for y in src_image], dtype=np.uint8)
-    hist_m = calculate_histogram(matched_image)
-    plt.bar(range(256), hist_m)
-    plt.show()
-    # print(matched_image[:1, :])
+
     return matched_image
 
 

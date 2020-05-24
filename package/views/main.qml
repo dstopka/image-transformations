@@ -24,9 +24,7 @@ ApplicationWindow {
 
     signal outputReady(string s)
     onOutputReady: {
-        console.log(s)
         outputImage.source = s
-        console.log(outputImage.source)
     }
     signal warning(string message)
     onWarning: {
@@ -162,7 +160,7 @@ ApplicationWindow {
                         Material.accent: controlsAccent
                         Material.elevation: controlsElevation
                         width: parent.width
-                        model: ["Histogram", "Entropy", "ImOpen", "Convex"]
+                        model: ["Histogram", "EntropyFilt", "ImOpen", "Convex"]
                     }
 
                     Label {
@@ -279,12 +277,12 @@ ApplicationWindow {
                         onClicked: {backend.transform_image(optionCombo.currentIndex)}
                     }
                     Button {
-                        id: startButton
+                        id: histogramButton
                         Material.foreground: controlsBackground
                         Material.elevation: controlsElevation
                         width: parent.width
-                        text: qsTr("START")
-                        onClicked: {backend.transform_image(optionCombo.currentIndex)}
+                        text: qsTr("HISTOGRAMS")
+                        onClicked: {backend.show_histograms()}
                     }
                 }
             }
