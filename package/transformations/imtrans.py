@@ -17,10 +17,12 @@ def image_type(src_image):
         channels = None
     if channels:
         return 'BGR'
+
     for x in range(height):
         for y in range(width):
-            if src_image[y, x] != 0 and src_image[y, x] != 255:
+            if src_image[x, y] != 0 and src_image[x, y] != 255:
                 return 'mono'
+
     return 'binary'
 
 
@@ -36,6 +38,7 @@ def calculate_cdf(histogram):
 
     # Normalize the cdf
     normalized_cdf = cdf / cdf[-1]
+
     return normalized_cdf
 
 
@@ -47,6 +50,8 @@ def calculate_histogram(src_channel):
     :return: histogram : The histogram
     :rtype: np.array
     """
+
+    # Calculate the histogram
     histogram = np.zeros(256)
     for y in src_channel:
         histogram[y] += 1
@@ -86,6 +91,7 @@ def match_histograms_mono(src_image, ref_hist):
     """
     # Calculate image histogram
     src_hist = calculate_histogram(src_image.flatten())
+
     # Calculate normalized cumulative distribution functions
     src_cdf = calculate_cdf(src_hist)
     ref_cdf = calculate_cdf(ref_hist)
@@ -169,20 +175,27 @@ def entropy_filter(src_image, mask_size):
     :return: result_image: The image after filtering
     :rtype: np.array
     """
+    # Get necessary dimensions
     mask_half = math.floor(mask_size/2)
     img_height, img_width = src_image.shape[:2]
     result_image = np.zeros((img_height, img_width))
 
+    # Iterate over the source image
     for i in range(img_height):
         for j in range(img_width):
+
+            # Get indexes of region
             Lx = np.max([0, j - mask_half])
             Ux = np.min([img_width, j + mask_half])
             Ly = np.max([0, i - mask_half])
             Uy = np.min([img_height, i + mask_half])
             region = src_image[Ly:Uy, Lx:Ux]
+
+            # Calculate the entropy
             res = entropy(region)
             result_image[i, j] = res
 
+    # Normalize the result
     min_entropy = min(result_image.flatten())
     max_entropy = max(result_image.flatten())
     result_image = (result_image - min_entropy) / (max_entropy - min_entropy) * 255
@@ -200,7 +213,7 @@ def entropy(region):
     :rtype: float
     """
 
-    # calculate histograms of all channels
+    # Calculate histograms of all channels
     if image_type(region) == 'BGR':
         histogram = (calculate_histogram(region[:, :, 0].flatten()) +
                     calculate_histogram(region[:, :, 1].flatten()) +
@@ -208,7 +221,7 @@ def entropy(region):
     else:
         histogram = calculate_histogram(region.flatten()) / (region.shape[0] * region.shape[1])
 
-    # calculate the entropy
+    # Calculate the entropy
     histogram = list(filter(lambda p: p > 0, histogram))
     entropy_value = -np.sum(np.multiply(np.log(histogram), histogram))
 
@@ -243,19 +256,19 @@ def convex_hull(src_image):
     :return: result_image: The image after convex hull
     :rtype: np.array
     """
-    # create structural elements
+    # Create structural elements
     se_0deg = np.array([[1, 1, 0], [1, -1, 0], [1, 0, -1]], dtype=np.int)
     se_45deg = np.array([[1, 1, 1], [1, -1, 0], [0, -1, 0]], dtype=np.int)
 
-    # allocate comparison image to enter while
+    # Allocate comparison image to enter while
     compare = np.zeros_like(src_image)
     result_image = src_image
 
-    # perform hit-or-miss until no change
+    # Perform hit-or-miss until no change
     while not np.array_equal(result_image, compare):
         compare = result_image
 
-        # hit-or-miss for each se position
+        # Hit-or-miss for each se position
         for i in range(4):
             result_image = result_image | hit_miss(result_image, se_0deg)
             result_image = result_image | hit_miss(result_image, se_45deg)
@@ -274,13 +287,19 @@ def erode(src_image, se):
     :return: result_image: The image after erosion
     :rtype: np.array
     """
+
+    # Get the dimensions
     result_image = np.zeros_like(src_image)
     img_width, img_height = src_image.shape[:2]
     mask_x, mask_y = se.shape[:2]
     mask_half_x = math.floor(mask_x / 2)
     mask_half_y = math.floor(mask_y / 2)
+
+    # Iterate over the points that are centers of the mask
     for i in range(math.ceil(mask_x / 2), img_width - math.floor(mask_x / 2)):
         for j in range(math.ceil(mask_y / 2), img_height - mask_half_y):
+
+            # Cut part of image and compare with SE
             on = src_image[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
             bool_idx = (se == 1)
             result_image[i, j] = min(on[bool_idx])
@@ -297,13 +316,19 @@ def dilate(src_image, se):
     :return: result_image: The image after dilation
     :rtype: np.array
     """
+
+    # Get the dimensions
     result_image = np.zeros_like(src_image)
     img_width, img_height = src_image.shape[:2]
     mask_x, mask_y = se.shape[:2]
     mask_half_x = math.floor(mask_x / 2)
     mask_half_y = math.floor(mask_y / 2)
+
+    # Iterate over the points that are centers of the mask
     for i in range(math.ceil(mask_x / 2), img_width - math.floor(mask_x / 2)):
         for j in range(math.ceil(mask_y / 2), img_height - mask_half_y):
+
+            # Cut part of image and compare with SE
             on = src_image[i - mask_half_x:i + mask_half_x + 1, j - mask_half_y: j + mask_half_y + 1]
             bool_idx = (se == 1)
             result_image[i, j] = max(on[bool_idx])
@@ -321,11 +346,11 @@ def hit_miss(src_image, se):
     :return: result_image: The image after dilation
     :rtype: np.array
     """
-    # create mask [0, 1] from [-1, 0, 1]
+    # Create mask [0, 1] from [-1, 0, 1]
     true_mask = se * (se == 1)
     false_mask = se * (se == -1) * -1
 
-    # perform two erosion to get hit-or-miss
+    # Perform two erosion to get hit-or-miss
     result_image = erode(src_image, true_mask) & erode(~src_image, false_mask)
 
     return result_image
@@ -340,6 +365,8 @@ def liner_se(length, angle):
     :return: result_se: The crated SE
     :rtype: np.array
     """
+
+    # Calculate x by y size
     theta = math.radians(angle)
     dx = abs(math.cos(theta))
     dy = abs(math.sin(theta))
@@ -352,12 +379,14 @@ def liner_se(length, angle):
     n2y = round((lgy - 1) / 2)
     ny = 2 * n2y + 1
 
+    # Get SE positions
     result_se = np.zeros([ny, nx])
     if math.cos(theta) >= 0:
         points = bresenham(0, ny - 1, nx - 1, 0)
     else:
         points = bresenham(nx - 1, ny - 1, 0, 0)
 
+    # Create SE
     for x in points:
         result_se[x[1], x[0]] = 1
 

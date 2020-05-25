@@ -1,6 +1,7 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtQuick import *
+import cv2
 from package.transformations.imtrans import *
 import matplotlib.pyplot as plt
 
@@ -72,27 +73,33 @@ class Backend(QObject):
                 plt.title("Mono"), plt.bar(range(256), hist)
         else:
             input_type = image_type(self._input_img)
-            if input_type == 'BGR':
-                hist_blue = calculate_histogram(self._input_img[:, :, 0])
-                hist_green = calculate_histogram(self._input_img[:, :, 1])
-                hist_red = calculate_histogram(self._input_img[:, :, 2])
-                plt.subplot(231), plt.title("Input Red"), plt.bar(range(256), hist_red)
-                plt.subplot(232), plt.title("Input Green"), plt.bar(range(256), hist_green)
-                plt.subplot(233), plt.title("Input Blue"), plt.bar(range(256), hist_blue)
-            else:
-                hist = calculate_histogram(self._input_img)
-                plt.subplot(231), plt.title("Input Mono"), plt.bar(range(256), hist)
             output_type = image_type(self._output_img)
-            if output_type == 'BGR':
-                hist_blue = calculate_histogram(self._output_img[:, :, 0])
-                hist_green = calculate_histogram(self._output_img[:, :, 1])
-                hist_red = calculate_histogram(self._output_img[:, :, 2])
-                plt.subplot(234), plt.title("Output Red"), plt.bar(range(256), hist_red)
-                plt.subplot(235), plt.title("Output Green"), plt.bar(range(256), hist_green)
-                plt.subplot(236), plt.title("Output Blue"), plt.bar(range(256), hist_blue)
+            if input_type != 'BGR' and output_type != 'BGR':
+                hist_input = calculate_histogram(self._input_img)
+                plt.subplot(121), plt.title("Input Mono"), plt.bar(range(256), hist_input)
+                hist_output = calculate_histogram(self._output_img)
+                plt.subplot(122), plt.title("Output Mono"), plt.bar(range(256), hist_output)
             else:
-                hist = calculate_histogram(self._output_img)
-                plt.subplot(234), plt.title("Output Mono"), plt.bar(range(256), hist)
+                if input_type == 'BGR':
+                    hist_blue = calculate_histogram(self._input_img[:, :, 0])
+                    hist_green = calculate_histogram(self._input_img[:, :, 1])
+                    hist_red = calculate_histogram(self._input_img[:, :, 2])
+                    plt.subplot(231), plt.title("Input Red"), plt.bar(range(256), hist_red)
+                    plt.subplot(232), plt.title("Input Green"), plt.bar(range(256), hist_green)
+                    plt.subplot(233), plt.title("Input Blue"), plt.bar(range(256), hist_blue)
+                else:
+                    hist = calculate_histogram(self._input_img)
+                    plt.subplot(231), plt.title("Input Mono"), plt.bar(range(256), hist)
+                if output_type == 'BGR':
+                    hist_blue = calculate_histogram(self._output_img[:, :, 0])
+                    hist_green = calculate_histogram(self._output_img[:, :, 1])
+                    hist_red = calculate_histogram(self._output_img[:, :, 2])
+                    plt.subplot(234), plt.title("Output Red"), plt.bar(range(256), hist_red)
+                    plt.subplot(235), plt.title("Output Green"), plt.bar(range(256), hist_green)
+                    plt.subplot(236), plt.title("Output Blue"), plt.bar(range(256), hist_blue)
+                else:
+                    hist = calculate_histogram(self._output_img)
+                    plt.subplot(234), plt.title("Output Mono"), plt.bar(range(256), hist)
 
         plt.show()
 
